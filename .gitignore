@@ -1,0 +1,9 @@
+.env
+.env.local
+.venv/
+__pycache__/
+*.pyc
+
+# Literal vendor response bodies and paid-call smoke checkpoints stay local.
+data/funding/provider-runs-v1/raw/
+data/funding/provider-smoke-v1.json
