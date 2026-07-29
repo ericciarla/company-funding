@@ -17,12 +17,22 @@ from funding.score_funding_stage_dry_run import canonical_stage
 
 ROOT = Path(__file__).resolve().parents[1]
 INPUT = ROOT / "data/funding/company-funding-inputs-v1.csv"
-DEFAULT_RAW = ROOT / "data/funding/provider-runs-v1/raw"
+DEFAULT_RAW_V1 = ROOT / "data/funding/provider-runs-v1/raw"
+DEFAULT_RAW_V2 = ROOT / "data/funding/provider-runs-v2/raw"
 OUTPUT = ROOT / "data/latest-funding.json"
 PROVIDERS = {
     "fiber": "Fiber", "predictleads": "PredictLeads", "apollo": "Apollo",
     "people-data-labs": "People Data Labs", "ocean": "Ocean.io",
     "explorium": "Explorium", "company-enrich": "CompanyEnrich",
+    "crunchbase": "Crunchbase", "exa": "Exa", "parallel": "Parallel",
+    "crustdata": "Crustdata",
+}
+PROVIDER_RAW_DIR = {
+    **{slug: "v1" for slug in (
+        "fiber", "predictleads", "apollo", "people-data-labs", "ocean",
+        "explorium", "company-enrich",
+    )},
+    **{slug: "v2" for slug in ("crunchbase", "exa", "parallel", "crustdata")},
 }
 FIELDS = ("latest_stage", "latest_date", "latest_amount", "total_raised", "round_count")
 
@@ -53,10 +63,26 @@ def case_from_row(row: dict[str, str]) -> dict[str, Any]:
     }
 
 
-def build_runs(cases: list[dict[str, Any]], raw_dir: Path) -> list[dict[str, Any]]:
+def normalized_fields(raw: dict[str, Any]) -> dict[str, Any]:
+    """Project v1/v2 normalized records onto the stable public schema."""
+    normalized = raw.get("normalized") or {}
+    def first_present(*values: Any) -> Any:
+        return next((value for value in values if value not in (None, "")), None)
+
+    return {
+        "latest_stage": normalized.get("latest_stage"),
+        "latest_date": first_present(normalized.get("latest_date"), normalized.get("latest_announced_on")),
+        "latest_amount": normalized.get("latest_amount"),
+        "total_raised": normalized.get("total_raised"),
+        "round_count": first_present(normalized.get("round_count"), normalized.get("funding_round_count")),
+    }
+
+
+def build_runs(cases: list[dict[str, Any]], raw_v1: Path, raw_v2: Path) -> list[dict[str, Any]]:
     by_domain = {case["input_domain"]: case for case in cases}
     runs: list[dict[str, Any]] = []
     for slug, name in PROVIDERS.items():
+        raw_dir = raw_v1 if PROVIDER_RAW_DIR[slug] == "v1" else raw_v2
         files = sorted((raw_dir / slug).glob("*.json"))
         if len(files) != len(cases):
             raise RuntimeError(f"{slug}: expected {len(cases)} checkpoint files, found {len(files)}")
@@ -66,7 +92,7 @@ def build_runs(cases: list[dict[str, Any]], raw_dir: Path) -> list[dict[str, Any
             case = by_domain.get(domain)
             if not case:
                 raise RuntimeError(f"{slug}: unknown checkpoint domain {domain!r}")
-            normalized = raw.get("normalized") or {}
+            normalized = normalized_fields(raw)
             truth = canonical_stage(case["reference"]["latest_stage"])
             prediction = canonical_stage(normalized.get("latest_stage"))
             eligible = truth is not None
@@ -74,7 +100,7 @@ def build_runs(cases: list[dict[str, Any]], raw_dir: Path) -> list[dict[str, Any
                 "case_slug": case["case_slug"], "provider_slug": slug, "provider_name": name,
                 "status": raw.get("status") or "error", "latency_ms": raw.get("latency_ms"),
                 "error": raw.get("failure_reason"), "queried_at": raw.get("completed_at"),
-                "normalized": {field: normalized.get(field) for field in FIELDS},
+                "normalized": normalized,
                 "audit": {"source": raw.get("source"), "funding_related_paths": raw.get("funding_related_paths") or [], "prior_attempt_count": len(raw.get("prior_attempts") or [])},
                 "metrics": {
                     "stage_eligible": int(eligible),
@@ -116,13 +142,14 @@ def leaderboard(cases: list[dict[str, Any]], runs: list[dict[str, Any]]) -> list
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--raw-dir", type=Path, default=DEFAULT_RAW)
+    parser.add_argument("--raw-v1-dir", type=Path, default=DEFAULT_RAW_V1)
+    parser.add_argument("--raw-v2-dir", type=Path, default=DEFAULT_RAW_V2)
     args = parser.parse_args()
     with INPUT.open(encoding="utf-8", newline="") as handle:
         cases = [case_from_row(row) for row in csv.DictReader(handle)]
     if len(cases) != 300 or len({case["input_domain"] for case in cases}) != 300:
         raise RuntimeError("expected exactly 300 unique input domains")
-    runs = build_runs(cases, args.raw_dir)
+    runs = build_runs(cases, args.raw_v1_dir, args.raw_v2_dir)
     snapshot = {
         "schema_version": "1.0", "dataset_slug": "company-funding-enrichment-v1",
         "dataset_name": "Company Funding Enrichment — 300-Company Cohort", "status": "complete",
