@@ -2,7 +2,7 @@
 
 Open data and reproducible runner code for the [OpenBenchmarks Company Funding Benchmark](https://openbenchmarks.com/company-funding).
 
-The frozen release compares seven company-data APIs on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
+The frozen release compares ten programmatic providers plus Crunchbase's exported dataset on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
 
 ## Evaluated fields and headline metric
 
@@ -23,10 +23,12 @@ The other four fields contribute to the separate returned-data coverage metric; 
 | Path | Contents |
 |---|---|
 | `data/funding/company-funding-inputs-v1.csv` | Exact frozen 300-domain input list and primary-source funding references |
-| `data/latest-funding.json` | Publication snapshot: reference records, 2,100 normalized provider outputs, deterministic judgments, and leaderboard |
+| `data/latest-funding.json` | Publication snapshot: reference records, 3,300 normalized provider outputs, deterministic judgments, and leaderboard |
 | `data/funding/pricing-v1.json` | Dated public entry-tier cost assumptions used for the estimated USD cost display |
 | `scripts/funding/run_funding_benchmark.py` | Credit-safe, resumable provider runner |
-| `scripts/funding/smoke_test_funding_providers.py` | Small contract smoke test and seven provider endpoint adapters |
+| `scripts/funding/smoke_test_funding_providers.py` | Small contract smoke test for the original endpoint adapters |
+| `scripts/funding/run_structured_web_research.py` | Five-case Exa/Parallel structured-output contract pilot; raw outputs remain local |
+| `scripts/funding/run_crustdata_funding_batch.py` | Credit-safe submit/poll runner for Crustdata's 300-company batch enrichment |
 | `scripts/funding/score_funding_stage_dry_run.py` | Transparent latest-stage taxonomy and offline scoring report |
 | `scripts/build_public_snapshot.py` | Builds the normalized publication snapshot from local runner checkpoints, excluding literal API response bodies |
 | `scripts/recompute_funding_snapshot.py` | Recomputes every metric and leaderboard row from the committed snapshot without API calls |
@@ -42,7 +44,7 @@ python3 -m venv .venv
 PYTHONPATH=scripts .venv/bin/python scripts/verify_public_artifacts.py
 ```
 
-The verifier checks the frozen 300-company cohort, all 2,100 provider cells, the 268-company stage denominator, and the published leaderboard. It makes no network calls.
+The verifier checks the frozen 300-company cohort, all 3,300 provider cells, the 268-company stage denominator, and the published leaderboard. It makes no network calls.
 
 ## Re-run live APIs
 
@@ -53,15 +55,24 @@ PYTHONPATH=scripts .venv/bin/python scripts/funding/run_funding_benchmark.py \
   --only fiber --confirm-paid
 ```
 
+For the new providers, use `run_structured_web_research.py exa` or `parallel`
+for the five-case contract pilot, and `run_crustdata_funding_batch.py submit`
+then `poll` for Crustdata. Crunchbase is deliberately not rerun by a script: it
+is a self-serve-plan CSV export, recorded as such in the snapshot.
+
 The committed snapshot contains the normalized benchmark contract for every provider answer, including status, latency, errors, stage verdicts, and adapter audit metadata. Literal vendor HTTP response bodies stay in local, ignored runner checkpoints and are not redistributed here.
 
 ## Providers
 
 - Apollo
 - CompanyEnrich
+- Crunchbase (exported dataset; no API-latency score)
+- Crustdata
+- Exa
 - Explorium
 - Fiber
 - Ocean.io
+- Parallel
 - People Data Labs
 - PredictLeads
 

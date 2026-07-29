@@ -12,7 +12,9 @@ The 300 records comprise 134 events from 3–24 months before collection, 129 ev
 
 ## Publication snapshot
 
-`data/latest-funding.json` contains the exact 300 cases and 2,100 provider cells used by the public leaderboard. A run records only the normalized contract, status, latency, error, and funding-related response paths. It intentionally excludes literal vendor HTTP response bodies.
+`data/latest-funding.json` contains the exact 300 cases and 3,300 provider cells used by the public leaderboard: ten programmatic providers and Crunchbase's exported dataset. A run records only the normalized contract, status, latency where applicable, error, and funding-related response paths. It intentionally excludes literal vendor HTTP response bodies and Crunchbase export rows.
+
+The public schema stays stable across checkpoint formats. `latest_announced_on` is projected to `latest_date`, and `funding_round_count` to `round_count`, before publication. Crunchbase is marked with source `csv_export` and has `latency_ms: null`; it must not be compared in request-latency rankings.
 
 `stage_eligible`, `stage_returned`, and `stage_correct` are deterministic 0/1 judgments. Stage correctness is evaluated only when the reference stage maps to the canonical taxonomy.
 
