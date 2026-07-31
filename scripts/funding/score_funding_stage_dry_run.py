@@ -17,9 +17,11 @@ from typing import Any
 
 
 ROOT = Path(__file__).resolve().parents[2]
-INPUT = ROOT / "data" / "funding" / "company-funding-benchmark-inputs-v1.csv"
+INPUT = ROOT / "data" / "funding" / "company-funding-inputs-v1.csv"
+# Literal vendor response bodies stay local, so a public clone has no raw runs.
+# The reference canonicalisation below still reproduces without them.
 RAW = ROOT / "data" / "funding" / "provider-runs-v1" / "raw"
-OUTPUT = ROOT / "data" / "funding" / "provider-runs-v1" / "stage-dry-run.json"
+OUTPUT = ROOT / "data" / "funding" / "stage-dry-run.json"
 
 
 def canonical_stage(value: Any) -> str | None:
@@ -27,6 +29,14 @@ def canonical_stage(value: Any) -> str | None:
     raw = str(value or "").strip().lower()
     if not raw:
         return None
+    # Common provider labels that are direct equivalents of taxonomy entries.
+    # Keep these mappings provider-neutral so every vendor is scored identically.
+    if re.search(r"\bpre[-\s]?a\b", raw):
+        return "pre_series_a"
+    if re.search(r"(?:^|[^a-z0-9])a\+(?:$|[^a-z0-9])", raw):
+        return "series_a"
+    if re.search(r"(?:^|[^a-z0-9])b(?:\+|3\s*/\s*b4)(?:$|[^a-z0-9])", raw) or "b-round series" in raw or "轮融资" in raw and re.search(r"\bb(?:3|4)?\b", raw):
+        return "series_b"
     text = re.sub(r"[^a-z0-9]+", " ", raw).strip()
     # Preserve pre-series labels before the general Series matching.
     match = re.search(r"\bpre\s+series\s+([a-h])\b", text)
@@ -39,10 +49,16 @@ def canonical_stage(value: Any) -> str | None:
         return f"series_{match.group(1)}"
     if re.search(r"\bseed\b", text):
         return "seed"
+    if "pe growth" in text or "private equity growth" in text:
+        return "private_equity"
     if "private equity" in text:
         return "private_equity"
-    if "growth equity" in text or "growth investment" in text:
+    if "growth equity" in text or "growth investment" in text or "growth capital" in text:
         return "growth_equity"
+    if "retail investment" in text or text == "crowdfunding" or "crowdfunding equity" in text:
+        return "equity_crowdfunding"
+    if re.search(r"\b(?:early|later)\s+stage\s+vc\b", text):
+        return "venture_unspecified"
     if "strategic" in text or "corporate" in text:
         return "strategic_or_corporate"
     if "equity crowdfunding" in text:
@@ -84,7 +100,13 @@ def main() -> int:
         },
         "providers": {},
     }
-    for provider_dir in sorted(path for path in RAW.iterdir() if path.is_dir()):
+    provider_dirs = sorted(path for path in RAW.iterdir() if path.is_dir()) if RAW.is_dir() else []
+    if not provider_dirs:
+        report["providers_note"] = (
+            f"No raw provider runs under {RAW.relative_to(ROOT)}; reporting reference "
+            "canonicalisation only. Point RAW at your own run checkpoints to score a provider."
+        )
+    for provider_dir in provider_dirs:
         rows = [json.loads(path.read_text()) for path in provider_dir.glob("*.json")]
         by_domain = {row["input"]["domain"]: row for row in rows}
         predicted_raw = {domain: (by_domain.get(domain, {}).get("normalized") or {}).get("latest_stage") for domain in eligible}
