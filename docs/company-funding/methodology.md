@@ -16,6 +16,8 @@ Every completed programmatic call or exported record produced a local checkpoint
 
 ## Evaluation
 
-The headline comparison is latest funding stage. Source and provider labels are deterministically normalized into the canonical taxonomy documented in [DATA.md](../../DATA.md). Correct stage yield is correct canonical latest stages divided by companies with an available specific, source-verified stage label. Missing and incorrect provider stages lower yield. Missing or vague reference-stage labels are excluded from the denominator.
+The headline comparison is latest funding stage. The v2 release evaluates every provider cell with `gpt-5.6-terra` at medium reasoning effort, using only the supplied Ground Truth stage/date/amount and the normalized provider stage/date/amount. The exact executable prompt and structured response schema are public in [`judge_funding_stage.py`](../../scripts/funding/judge_funding_stage.py); every cell's decision basis and concise reason are retained in `data/latest-funding.json`.
+
+Correct stage yield is LLM-judged correct latest stages divided by all 300 Ground Truth-reviewed companies. The policy handles documented equivalents (including same-letter Series suffixes, PE/growth, strategic-investment, Seed Bridge/Pre-Series A, and crowdfunding/grant variants), keeps Seed and Pre-Seed distinct, and permits exact date or amount evidence for other non-Series disagreements. Blank Ground Truth passes every vendor response; Undisclosed Ground Truth accepts an Undisclosed or blank vendor stage.
 
 Latest date, latest amount, total raised, and funding-round count are retained as normalized outputs and contribute to the returned-data coverage metric, but are not headline-scored in this release.

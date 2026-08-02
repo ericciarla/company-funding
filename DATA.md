@@ -12,14 +12,14 @@ The 300 records comprise 134 events from 3–24 months before collection, 129 ev
 
 ## Publication snapshot
 
-`data/latest-funding.json` contains the exact 300 cases and 3,300 provider cells used by the public leaderboard: ten programmatic providers and Crunchbase's exported dataset. A run records only the normalized contract, status, latency where applicable, error, and funding-related response paths. It intentionally excludes literal vendor HTTP response bodies and Crunchbase export rows.
+`data/latest-funding.json` contains the exact 300 cases and 3,300 provider cells used by the public leaderboard: ten programmatic providers and Crunchbase's exported dataset. A run records only the normalized contract, status, latency where applicable, safe audit metadata, and the LLM judgment. It intentionally excludes literal vendor HTTP response bodies and Crunchbase export rows.
 
 The public schema stays stable across checkpoint formats. `latest_announced_on` is projected to `latest_date`, and `funding_round_count` to `round_count`, before publication. Crunchbase is marked with source `csv_export` and has `latency_ms: null`; it must not be compared in request-latency rankings.
 
-`stage_eligible`, `stage_returned`, and `stage_correct` are deterministic 0/1 judgments. Stage correctness is evaluated only when the reference stage maps to the canonical taxonomy.
+`stage_eligible`, `stage_returned`, and `stage_correct` are 0/1 metric values. Every run additionally contains `metrics.llm_judge`, with the GPT-5.6 Terra model/policy, decision basis, and concise reason used for the final stage verdict. All 300 Ground Truth-reviewed companies are eligible in v2.
 
 ## Canonical latest-stage taxonomy
 
 The scorer maps labels to `pre_seed`, `seed`, `pre_series_a`, `pre_series_b`, `series_a` through `series_h`, `private_equity`, `growth_equity`, `strategic_or_corporate`, `equity_crowdfunding`, `angel`, `venture_unspecified`, `convertible_note`, `debt_or_credit`, `grant_or_non_equity`, `pre_ipo`, and `post_ipo`.
 
-Specific labels such as `Series B1` map to their parent stage. Vague labels such as `early stage`, `funding`, or `undisclosed` do not create a scored stage label.
+The v2 judgment policy is authoritative for scoring and is published in [`docs/company-funding/llm-judge-v2.md`](docs/company-funding/llm-judge-v2.md). It treats same-letter Series suffixes as a match, preserves the Seed/Pre-Seed distinction, specifies approved equivalence groups, and allows exact date or amount evidence for other non-Series disagreements.

@@ -14,7 +14,7 @@ Every provider response is normalized to five funding fields:
 - Total raised
 - Funding-round count
 
-The headline metric is **correct stage yield**: correct canonical latest stages divided by companies with a specific, source-verified latest-stage reference. Missing or incorrect provider stages lower yield. Missing or vague reference stages are excluded from its denominator.
+The headline metric is **correct stage yield**: LLM-judged correct latest stages divided by all 300 Ground Truth-reviewed companies. The rubric handles documented funding-stage equivalents and exact date/amount evidence for non-Series disagreements. Missing or incorrect provider stages lower yield; blank Ground Truth is a pass-through case and Undisclosed Ground Truth accepts a blank vendor stage.
 
 The other four fields contribute to the separate returned-data coverage metric; they are retained but not headline-scored in this release.
 
@@ -23,13 +23,15 @@ The other four fields contribute to the separate returned-data coverage metric; 
 | Path | Contents |
 |---|---|
 | `data/funding/company-funding-inputs-v1.csv` | Exact frozen 300-domain input list and primary-source funding references |
-| `data/latest-funding.json` | Publication snapshot: reference records, 3,300 normalized provider outputs, deterministic judgments, and leaderboard |
+| `data/latest-funding.json` | Publication snapshot: Ground Truth, 3,300 normalized provider outputs, LLM verdicts/reasons, and leaderboard |
 | `data/funding/pricing-v1.json` | Dated public entry-tier cost assumptions used for the estimated USD cost display |
 | `scripts/funding/run_funding_benchmark.py` | Credit-safe, resumable provider runner |
 | `scripts/funding/smoke_test_funding_providers.py` | Small contract smoke test for the original endpoint adapters |
 | `scripts/funding/run_structured_web_research.py` | Five-case Exa/Parallel structured-output contract pilot; raw outputs remain local |
 | `scripts/funding/run_crustdata_funding_batch.py` | Credit-safe submit/poll runner for Crustdata's 300-company batch enrichment |
 | `scripts/funding/score_funding_stage_dry_run.py` | Transparent latest-stage taxonomy and offline scoring report |
+| `scripts/funding/judge_funding_stage.py` | Exact GPT-5.6 Terra v2 judge prompt and structured-output runner |
+| `docs/company-funding/llm-judge-v2.md` | Public v2 matching policy and judge contract |
 | `scripts/build_public_snapshot.py` | Builds the normalized publication snapshot from local runner checkpoints, excluding literal API response bodies |
 | `scripts/recompute_funding_snapshot.py` | Recomputes every metric and leaderboard row from the committed snapshot without API calls |
 | `scripts/verify_public_artifacts.py` | Zero-network integrity, cohort, and leaderboard checks |
@@ -44,7 +46,7 @@ python3 -m venv .venv
 PYTHONPATH=scripts .venv/bin/python scripts/verify_public_artifacts.py
 ```
 
-The verifier checks the frozen 300-company cohort, all 3,300 provider cells, the 268-company stage denominator, and the published leaderboard. It makes no network calls.
+The verifier checks the frozen 300-company cohort, all 3,300 provider cells, all 3,300 LLM verdicts/reasons, the 300-company denominator, and the published leaderboard. It makes no network calls.
 
 ## Re-run live APIs
 
@@ -60,7 +62,7 @@ for the five-case contract pilot, and `run_crustdata_funding_batch.py submit`
 then `poll` for Crustdata. Crunchbase is deliberately not rerun by a script: it
 is a self-serve-plan CSV export, recorded as such in the snapshot.
 
-The committed snapshot contains the normalized benchmark contract for every provider answer, including status, latency, errors, stage verdicts, and adapter audit metadata. Literal vendor HTTP response bodies stay in local, ignored runner checkpoints and are not redistributed here.
+The committed snapshot contains the normalized benchmark contract for every provider answer, including status, latency, errors, LLM stage verdicts/reasons, and safe adapter audit metadata. Literal vendor HTTP response bodies stay in local, ignored runner checkpoints and are not redistributed here.
 
 ## Providers
 
