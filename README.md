@@ -2,7 +2,7 @@
 
 Open data and reproducible runner code for the [OpenBenchmarks Company Funding Benchmark](https://openbenchmarks.com/company-funding).
 
-The frozen release compares ten programmatic providers plus Crunchbase's exported dataset on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
+The frozen release compares eleven programmatic providers plus Crunchbase's exported dataset on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
 
 ## Evaluated fields and headline metric
 
@@ -23,12 +23,13 @@ The other four fields contribute to the separate returned-data coverage metric; 
 | Path | Contents |
 |---|---|
 | `data/funding/company-funding-inputs-v1.csv` | Exact frozen 300-domain input list and primary-source funding references |
-| `data/latest-funding.json` | Publication snapshot: Ground Truth, 3,300 normalized provider outputs, LLM verdicts/reasons, and leaderboard |
+| `data/latest-funding.json` | Publication snapshot: Ground Truth, 3,600 normalized provider outputs, LLM verdicts/reasons, and leaderboard |
 | `data/funding/pricing-v1.json` | Dated public entry-tier cost assumptions used for the estimated USD cost display |
 | `scripts/funding/run_funding_benchmark.py` | Credit-safe, resumable provider runner |
 | `scripts/funding/smoke_test_funding_providers.py` | Small contract smoke test for the original endpoint adapters |
 | `scripts/funding/run_structured_web_research.py` | Five-case Exa/Parallel structured-output contract pilot; raw outputs remain local |
 | `scripts/funding/run_crustdata_funding_batch.py` | Credit-safe submit/poll runner for Crustdata's 300-company batch enrichment |
+| `scripts/funding/run_zoominfo_funding.py` | Credit-safe, resumable ZoomInfo GTM CLI runner; serial 10-domain requests with a two-second interval |
 | `scripts/funding/score_funding_stage_dry_run.py` | Transparent latest-stage taxonomy and offline scoring report |
 | `scripts/funding/judge_funding_stage.py` | Exact GPT-5.6 Terra v2 judge prompt and structured-output runner |
 | `docs/company-funding/llm-judge-v2.md` | Public v2 matching policy and judge contract |
@@ -46,7 +47,7 @@ python3 -m venv .venv
 PYTHONPATH=scripts .venv/bin/python scripts/verify_public_artifacts.py
 ```
 
-The verifier checks the frozen 300-company cohort, all 3,300 provider cells, all 3,300 LLM verdicts/reasons, the 300-company denominator, and the published leaderboard. It makes no network calls.
+The verifier checks the frozen 300-company cohort, all 3,600 provider cells, all 3,600 LLM verdicts/reasons, the 300-company denominator, and the published leaderboard. It makes no network calls.
 
 ## Re-run live APIs
 
@@ -61,6 +62,15 @@ For the new providers, use `run_structured_web_research.py exa` or `parallel`
 for the five-case contract pilot, and `run_crustdata_funding_batch.py submit`
 then `poll` for Crustdata. Crunchbase is deliberately not rerun by a script: it
 is a self-serve-plan CSV export, recorded as such in the snapshot.
+
+ZoomInfo uses the logged-in [`gtm`](https://gtm.ai) CLI rather than a key in
+`.env.local`. It sends serial batches of ten domains and requests only
+`companyFunding`, `recentFundingAmount`, `recentFundingDate`, and
+`totalFundingAmount`:
+
+```bash
+PYTHONPATH=scripts .venv/bin/python scripts/funding/run_zoominfo_funding.py --run
+```
 
 The committed snapshot contains the normalized benchmark contract for every provider answer, including status, latency, errors, LLM stage verdicts/reasons, and safe adapter audit metadata. Literal vendor HTTP response bodies stay in local, ignored runner checkpoints and are not redistributed here.
 
@@ -77,5 +87,6 @@ The committed snapshot contains the normalized benchmark contract for every prov
 - Parallel
 - People Data Labs
 - PredictLeads
+- ZoomInfo (GTM Studio company enrichment)
 
 No vendor sponsors or controls this benchmark.
