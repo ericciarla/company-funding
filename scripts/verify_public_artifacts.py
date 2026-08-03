@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SNAPSHOT = ROOT / "data/latest-funding.json"
 INPUTS = ROOT / "data/funding/company-funding-inputs-v1.csv"
-PROVIDERS = {"apollo", "company-enrich", "crunchbase", "crustdata", "exa", "explorium", "fiber", "ocean", "parallel", "people-data-labs", "predictleads"}
+PROVIDERS = {"apollo", "company-enrich", "crunchbase", "crustdata", "exa", "explorium", "fiber", "ocean", "parallel", "people-data-labs", "predictleads", "zoominfo"}
 EXPECTED_RECENCY = {"3_24_months": 134, "31_90_days": 79, "8_30_days": 50, "0_7_days": 37}
 
 
@@ -25,12 +25,12 @@ def main() -> int:
     assert len(inputs) == len(cases) == snapshot["case_count"] == 300
     assert len({case["input_domain"] for case in cases}) == 300
     assert Counter(case["recency_bucket"] for case in cases) == EXPECTED_RECENCY
-    assert len(runs) == 3300
+    assert len(runs) == 3600
     assert {run["provider_slug"] for run in runs} == PROVIDERS
-    assert len({(run["case_slug"], run["provider_slug"]) for run in runs}) == 3300
+    assert len({(run["case_slug"], run["provider_slug"]) for run in runs}) == 3600
     assert all("raw" not in run for run in runs)
     assert all(set((run.get("normalized") or {})) == {"latest_stage", "latest_date", "latest_amount", "total_raised", "round_count"} for run in runs)
-    assert len(rows) == 11
+    assert len(rows) == 12
     assert {row["provider_slug"] for row in rows} == PROVIDERS
     assert all(row["eligible_stage_cases"] == 300 for row in rows)
     assert all(set(run["metrics"]) == {"stage_eligible", "stage_returned", "stage_correct", "llm_judge"} for run in runs)
@@ -45,7 +45,7 @@ def main() -> int:
     assert all(run["latency_ms"] is None for run in crunchbase_runs)
     assert all((run.get("audit") or {}).get("source") == "csv_export" for run in crunchbase_runs)
     print("final companies: 300")
-    print("provider cells: 3300")
+    print("provider cells: 3600")
     print("Ground Truth-reviewed companies: 300")
     print(f"recency buckets: {dict(sorted(Counter(case['recency_bucket'] for case in cases).items()))}")
     print("artifact verification passed; network calls: 0")

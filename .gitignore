@@ -6,4 +6,5 @@ __pycache__/
 
 # Literal vendor response bodies and paid-call smoke checkpoints stay local.
 data/funding/provider-runs-v1/raw/
+data/funding/provider-runs-v2/raw/
 data/funding/provider-smoke-v1.json

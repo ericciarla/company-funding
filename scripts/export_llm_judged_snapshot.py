@@ -17,7 +17,7 @@ from supabase import create_client
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "data/latest-funding.json"
 DATASET_SLUG = "company-funding-enrichment-v2-llm-judge"
-PROVIDERS = {"fiber": "Fiber", "predictleads": "PredictLeads", "apollo": "Apollo", "people-data-labs": "People Data Labs", "ocean": "Ocean.io", "explorium": "Explorium", "company-enrich": "CompanyEnrich", "crunchbase": "Crunchbase", "exa": "Exa", "parallel": "Parallel", "crustdata": "Crustdata"}
+PROVIDERS = {"fiber": "Fiber", "predictleads": "PredictLeads", "apollo": "Apollo", "people-data-labs": "People Data Labs", "ocean": "Ocean.io", "explorium": "Explorium", "company-enrich": "CompanyEnrich", "crunchbase": "Crunchbase", "exa": "Exa", "parallel": "Parallel", "crustdata": "Crustdata", "zoominfo": "ZoomInfo"}
 FIELDS = ("latest_stage", "latest_date", "latest_amount", "total_raised", "round_count")
 
 
@@ -55,7 +55,7 @@ def main() -> None:
     dataset = client.table("datasets").select("id,slug,name").eq("slug", DATASET_SLUG).single().execute().data
     source_cases = fetch(client, "funding_cases", dataset["id"], "*")
     source_runs = fetch(client, "funding_runs", dataset["id"], "id,case_id,status,normalized_response,audit_response,latency_ms,cost_units,cost_unit,error,queried_at,providers(slug,name)")
-    if len(source_cases) != 300 or len(source_runs) != 3_300:
+    if len(source_cases) != 300 or len(source_runs) != 3_600:
         raise RuntimeError(f"unexpected source counts: {len(source_cases)} cases, {len(source_runs)} runs")
     case_by_id = {case["id"]: case for case in source_cases}
     metrics_by_run: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)

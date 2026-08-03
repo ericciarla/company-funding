@@ -25,14 +25,14 @@ PROVIDERS = {
     "people-data-labs": "People Data Labs", "ocean": "Ocean.io",
     "explorium": "Explorium", "company-enrich": "CompanyEnrich",
     "crunchbase": "Crunchbase", "exa": "Exa", "parallel": "Parallel",
-    "crustdata": "Crustdata",
+    "crustdata": "Crustdata", "zoominfo": "ZoomInfo",
 }
 PROVIDER_RAW_DIR = {
     **{slug: "v1" for slug in (
         "fiber", "predictleads", "apollo", "people-data-labs", "ocean",
         "explorium", "company-enrich",
     )},
-    **{slug: "v2" for slug in ("crunchbase", "exa", "parallel", "crustdata")},
+    **{slug: "v2" for slug in ("crunchbase", "exa", "parallel", "crustdata", "zoominfo")},
 }
 FIELDS = ("latest_stage", "latest_date", "latest_amount", "total_raised", "round_count")
 
