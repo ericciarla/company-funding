@@ -1,8 +1,8 @@
 # Latest-stage LLM judge — v2
 
-The 2026-08-01 snapshot evaluates every latest-stage provider response with `gpt-5.6-terra` at medium reasoning effort. The exact executable prompt and structured response schema are in [`scripts/funding/judge_funding_stage.py`](../../scripts/funding/judge_funding_stage.py).
+The 2026-08-04 snapshot evaluates every latest-stage provider response with `gpt-5.6` at medium reasoning effort. The exact executable prompt and structured response schema are in [`scripts/funding/judge_funding_stage.py`](../../scripts/funding/judge_funding_stage.py).
 
-The public snapshot records the model decision, decision basis, and concise reason for all 3,300 provider cells. The judge receives only the Ground Truth stage, date, and amount alongside the vendor's normalized stage, date, and amount; it does not browse or use company knowledge.
+The public snapshot records the model decision, decision basis, and concise reason for all 3,900 provider cells. The judge receives only the Ground Truth stage, date, and amount alongside the vendor's normalized stage, date, and amount; it does not browse or use company knowledge.
 
 ## Matching policy
 

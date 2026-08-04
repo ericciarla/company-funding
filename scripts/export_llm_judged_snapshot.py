@@ -17,7 +17,7 @@ from supabase import create_client
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "data/latest-funding.json"
 DATASET_SLUG = "company-funding-enrichment-v2-llm-judge"
-PROVIDERS = {"fiber": "Fiber", "predictleads": "PredictLeads", "apollo": "Apollo", "people-data-labs": "People Data Labs", "ocean": "Ocean.io", "explorium": "Explorium", "company-enrich": "CompanyEnrich", "crunchbase": "Crunchbase", "exa": "Exa", "parallel": "Parallel", "crustdata": "Crustdata", "zoominfo": "ZoomInfo"}
+PROVIDERS = {"fiber": "Fiber", "predictleads": "PredictLeads", "apollo": "Apollo", "people-data-labs": "People Data Labs", "ocean": "Ocean.io", "explorium": "Explorium", "company-enrich": "CompanyEnrich", "crunchbase": "Crunchbase", "exa": "Exa", "parallel": "Parallel", "crustdata": "Crustdata", "zoominfo": "ZoomInfo", "harmonic": "Harmonic"}
 FIELDS = ("latest_stage", "latest_date", "latest_amount", "total_raised", "round_count")
 
 
@@ -55,7 +55,7 @@ def main() -> None:
     dataset = client.table("datasets").select("id,slug,name").eq("slug", DATASET_SLUG).single().execute().data
     source_cases = fetch(client, "funding_cases", dataset["id"], "*")
     source_runs = fetch(client, "funding_runs", dataset["id"], "id,case_id,status,normalized_response,audit_response,latency_ms,cost_units,cost_unit,error,queried_at,providers(slug,name)")
-    if len(source_cases) != 300 or len(source_runs) != 3_600:
+    if len(source_cases) != 300 or len(source_runs) != 3_900:
         raise RuntimeError(f"unexpected source counts: {len(source_cases)} cases, {len(source_runs)} runs")
     case_by_id = {case["id"]: case for case in source_cases}
     metrics_by_run: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
@@ -72,7 +72,7 @@ def main() -> None:
         if set(metrics) != {"resolved", "stage_eligible", "stage_returned", "stage_correct", "stage_llm_judge"}:
             raise RuntimeError(f"incomplete metrics for {source['id']}")
         runs.append({"case_slug": case_by_id[source["case_id"]]["case_slug"], "provider_slug": source["providers"]["slug"], "provider_name": source["providers"]["name"], "status": source["status"], "latency_ms": source.get("latency_ms"), "cost_units": source.get("cost_units"), "cost_unit": source.get("cost_unit"), "error": source.get("error"), "queried_at": source.get("queried_at"), "normalized": {"latest_stage": normalized.get("latest_stage"), "latest_date": normalized.get("latest_date") or normalized.get("latest_announced_on"), "latest_amount": normalized.get("latest_amount"), "total_raised": normalized.get("total_raised"), "round_count": normalized.get("round_count") or normalized.get("funding_round_count")}, "audit": {key: audit.get(key) for key in ("source", "funding_related_paths", "prior_attempt_count", "failure_reason")}, "metrics": {"stage_eligible": metrics["stage_eligible"]["metric_value"], "stage_returned": metrics["stage_returned"]["metric_value"], "stage_correct": metrics["stage_correct"]["metric_value"], "llm_judge": metrics["stage_llm_judge"].get("detail") or {}}})
-    snapshot = {"schema_version": "2.0", "dataset_slug": dataset["slug"], "dataset_name": dataset["name"], "status": "complete", "generated_at": datetime.now(timezone.utc).isoformat(), "case_count": len(cases), "providers": PROVIDERS, "evaluated_fields": list(FIELDS), "judge": {"model": "gpt-5.6-terra", "reasoning_effort": "medium", "policy": "docs/company-funding/llm-judge-v2.md"}, "stage_metric": "LLM-judged latest funding stage correctness / 300 Ground Truth-reviewed companies", "case_counts_by_recency_bucket": dict(sorted(Counter(case["recency_bucket"] for case in cases).items())), "cases": sorted(cases, key=lambda case: case["case_slug"]), "runs": sorted(runs, key=lambda run: (run["case_slug"], run["provider_slug"]))}
+    snapshot = {"schema_version": "2.0", "dataset_slug": dataset["slug"], "dataset_name": dataset["name"], "status": "complete", "generated_at": datetime.now(timezone.utc).isoformat(), "case_count": len(cases), "providers": PROVIDERS, "evaluated_fields": list(FIELDS), "judge": {"model": "gpt-5.6", "reasoning_effort": "medium", "policy": "docs/company-funding/llm-judge-v2.md"}, "stage_metric": "LLM-judged latest funding stage correctness / 300 Ground Truth-reviewed companies", "case_counts_by_recency_bucket": dict(sorted(Counter(case["recency_bucket"] for case in cases).items())), "cases": sorted(cases, key=lambda case: case["case_slug"]), "runs": sorted(runs, key=lambda run: (run["case_slug"], run["provider_slug"]))}
     snapshot["leaderboard"] = leaderboard(snapshot["cases"], snapshot["runs"])
     OUTPUT.write_text(json.dumps(snapshot, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {OUTPUT}: {len(cases)} cases, {len(runs)} runs")

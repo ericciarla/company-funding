@@ -2,7 +2,7 @@
 
 Open data and reproducible runner code for the [OpenBenchmarks Company Funding Benchmark](https://openbenchmarks.com/company-funding).
 
-The frozen release compares eleven programmatic providers plus Crunchbase's exported dataset on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
+The frozen release compares eleven programmatic providers plus Crunchbase and Harmonic exported datasets on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
 
 ## Evaluated fields and headline metric
 
@@ -23,7 +23,7 @@ The other four fields contribute to the separate returned-data coverage metric; 
 | Path | Contents |
 |---|---|
 | `data/funding/company-funding-inputs-v1.csv` | Exact frozen 300-domain input list and primary-source funding references |
-| `data/latest-funding.json` | Publication snapshot: Ground Truth, 3,600 normalized provider outputs, LLM verdicts/reasons, and leaderboard |
+| `data/latest-funding.json` | Publication snapshot: Ground Truth, 3,900 normalized provider outputs, LLM verdicts/reasons, and leaderboard |
 | `data/funding/pricing-v1.json` | Dated public entry-tier cost assumptions used for the estimated USD cost display |
 | `scripts/funding/run_funding_benchmark.py` | Credit-safe, resumable provider runner |
 | `scripts/funding/smoke_test_funding_providers.py` | Small contract smoke test for the original endpoint adapters |
@@ -47,7 +47,7 @@ python3 -m venv .venv
 PYTHONPATH=scripts .venv/bin/python scripts/verify_public_artifacts.py
 ```
 
-The verifier checks the frozen 300-company cohort, all 3,600 provider cells, all 3,600 LLM verdicts/reasons, the 300-company denominator, and the published leaderboard. It makes no network calls.
+The verifier checks the frozen 300-company cohort, all 3,900 provider cells, all 3,900 LLM verdicts/reasons, the 300-company denominator, and the published leaderboard. It makes no network calls.
 
 ## Re-run live APIs
 
@@ -61,7 +61,9 @@ PYTHONPATH=scripts .venv/bin/python scripts/funding/run_funding_benchmark.py \
 For the new providers, use `run_structured_web_research.py exa` or `parallel`
 for the five-case contract pilot, and `run_crustdata_funding_batch.py submit`
 then `poll` for Crustdata. Crunchbase is deliberately not rerun by a script: it
-is a self-serve-plan CSV export, recorded as such in the snapshot.
+is a self-serve-plan CSV export, recorded as such in the snapshot. Harmonic is
+also a supplied, identity-audited export; it is published as normalized output
+and scored with the shared judge, but has no inferred request latency or cost.
 
 ZoomInfo uses the logged-in [`gtm`](https://gtm.ai) CLI rather than a key in
 `.env.local`. It sends serial batches of ten domains and requests only
@@ -83,6 +85,7 @@ The committed snapshot contains the normalized benchmark contract for every prov
 - Exa
 - Explorium
 - Fiber
+- Harmonic (identity-audited exported dataset; no API-latency or cost score)
 - Ocean.io
 - Parallel
 - People Data Labs
