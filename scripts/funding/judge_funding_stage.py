@@ -59,7 +59,7 @@ def main() -> None:
     source, destination = map(Path, sys.argv[1:])
     records = json.loads(source.read_text(encoding="utf-8"))["records"]
     response = OpenAI(api_key=os.environ["OPENAI_API_KEY"]).responses.create(
-        model=os.getenv("OPENAI_JUDGE_MODEL", "gpt-5.6-terra"),
+        model=os.getenv("OPENAI_JUDGE_MODEL", "gpt-5.6"),
         reasoning={"effort": os.getenv("OPENAI_JUDGE_REASONING_EFFORT", "medium")},
         text={"verbosity": "low", "format": {"type": "json_schema", "name": "funding_stage_judgments", "strict": True, "schema": RESULT_SCHEMA}},
         max_output_tokens=12_000,
@@ -68,7 +68,7 @@ def main() -> None:
     result = json.loads(response.output_text)
     if {row["record_id"] for row in result["results"]} != {row["record_id"] for row in records}:
         raise RuntimeError("judge response did not return exactly one result per record")
-    destination.write_text(json.dumps({"model": os.getenv("OPENAI_JUDGE_MODEL", "gpt-5.6-terra"), "reasoning_effort": os.getenv("OPENAI_JUDGE_REASONING_EFFORT", "medium"), **result}, indent=2) + "\n", encoding="utf-8")
+    destination.write_text(json.dumps({"model": os.getenv("OPENAI_JUDGE_MODEL", "gpt-5.6"), "reasoning_effort": os.getenv("OPENAI_JUDGE_REASONING_EFFORT", "medium"), **result}, indent=2) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -12,11 +12,11 @@ The 300 records comprise 134 events from 3–24 months before collection, 129 ev
 
 ## Publication snapshot
 
-`data/latest-funding.json` contains the exact 300 cases and 3,600 provider cells used by the public leaderboard: eleven programmatic providers and Crunchbase's exported dataset. A run records only the normalized contract, status, latency where applicable, safe audit metadata, and the LLM judgment. It intentionally excludes literal vendor HTTP response bodies and Crunchbase export rows.
+`data/latest-funding.json` contains the exact 300 cases and 3,900 provider cells used by the public leaderboard: eleven programmatic providers plus Crunchbase and Harmonic exported datasets. A run records only the normalized contract, status, latency where applicable, safe audit metadata, and the LLM judgment. It intentionally excludes literal vendor HTTP response bodies and source-export rows.
 
 The public schema stays stable across checkpoint formats. `latest_announced_on` is projected to `latest_date`, and `funding_round_count` to `round_count`, before publication. Crunchbase is marked with source `csv_export` and has `latency_ms: null`; it must not be compared in request-latency rankings.
 
-`stage_eligible`, `stage_returned`, and `stage_correct` are 0/1 metric values. Every run additionally contains `metrics.llm_judge`, with the GPT-5.6 Terra model/policy, decision basis, and concise reason used for the final stage verdict. All 300 Ground Truth-reviewed companies are eligible in v2.
+`stage_eligible`, `stage_returned`, and `stage_correct` are 0/1 metric values. Every run additionally contains `metrics.llm_judge`, with the GPT-5.6 model/policy, decision basis, and concise reason used for the final stage verdict. All 300 Ground Truth-reviewed companies are eligible in v2. Harmonic has 295 returned stages and 222 correct stages; because its source is a reviewed export, latency and cost are null rather than inferred.
 
 ## Canonical latest-stage taxonomy
 
