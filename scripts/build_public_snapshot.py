@@ -147,8 +147,8 @@ def main() -> int:
     args = parser.parse_args()
     with INPUT.open(encoding="utf-8", newline="") as handle:
         cases = [case_from_row(row) for row in csv.DictReader(handle)]
-    if len(cases) != 300 or len({case["input_domain"] for case in cases}) != 300:
-        raise RuntimeError("expected exactly 300 unique input domains")
+    if not cases or len({case["input_domain"] for case in cases}) != len(cases):
+        raise RuntimeError(f"{INPUT} is empty or has duplicate domains")
     runs = build_runs(cases, args.raw_v1_dir, args.raw_v2_dir)
     snapshot = {
         "schema_version": "1.0", "dataset_slug": "company-funding-enrichment-v1",

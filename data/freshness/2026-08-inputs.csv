@@ -1,0 +1,51 @@
+candidate_id,company_name,company_domain,ground_truth_stage,ground_truth_announced_on,ground_truth_amount,ground_truth_currency,ground_truth_total_raised,official_source_url,official_source_kind,official_source_publisher,official_published_at,evidence_confidence,evidence_quote,review_status
+freshness-2026-08_7825023f4407a3b4,Apnimed,apnimed.com,ipo,2026-07-31,192000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_e322ef54c4c06283,Applied Computing,appliedcomputing.com,series_a,2026-07-16,17400000,EUR,,,,,,,,pending_ground_truth_research
+freshness-2026-08_3b1b9aa9f2c44f27,Attovia Therapeutics,attovia.com,ipo,2026-08-05,289000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_7d52607e80abed75,"Aurenar, Inc",aurenar.com,seed,2026-07-28,5700000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_f97815f9af519d1b,Axis Robotics,axisrobotics.ai,seed,2026-07-27,12000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_6764805852309f57,BeCertain,becertain.ai,pre_seed,2026-07-16,1700000,GBP,,,,,,,,pending_ground_truth_research
+freshness-2026-08_786ee88fb2e8d016,"BlossomHill Therapeutics, Inc.",bhtherapeutics.com,ipo,2026-08-07,150000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_9a66e0fd66a04bfc,BioScout,bioscout.com.au,seed,2026-08-07,68000000,AUD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_309dd412e38d9144,Cantina,cantina.security,venture_unknown,2026-07-30,8000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_86b51253da429bbf,Cheiron,cheiron.bio,seed,2026-07-22,8000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_33cd5e60cc4643e0,Claros Technologies,clarostechnologies.com,series_b,2026-07-28,55000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_ede2851f05695cb0,conmeet,conmeet.io,seed,2026-08-05,6000000,EUR,,,,,,,,pending_ground_truth_research
+freshness-2026-08_c91478a9c76a2eae,Cordant,cordant.ai,seed,2026-07-21,8000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_a2549f33238a5449,"CORE Biomedicine, Inc.",corebiomedicine.com,series_a,2026-07-28,21000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_7c45a6d001afa16b,Databahn.ai,databahn.ai,series_b,2026-07-30,40000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_0d5e2f5f7f56d939,Databricks,databricks.com,private_equity,2026-08-13,5000000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_30807c3ebedd8b4b,DITTO Daily,dittodaily.com,seed,2026-07-28,6000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_42598794d52c2aba,Draig Therapeutics,draigtherapeutics.com,series_b,2026-07-15,65000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_b7b39cf92b3a21d5,Epicrispr Biotechnologies,epicrispr.com,series_c,2026-08-11,90000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_feacf55b20d551dd,Etched,etched.com,series_c,2026-07-23,300000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_d0e696a21cc1eeb8,EverSettled,eversettled.com,seed,2026-07-16,5000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_7b789f1867830257,Fabulate,fabulate.co,venture_unknown,2026-08-10,4500000,AUD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_94264c4313183fb0,Reformed,feelreformed.com,series_a,2026-07-16,22000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_9d18077d27e06523,Fincart,fincart.io,seed,2026-07-27,2800000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_a3c0fe52c943e7cc,Fisent Technologies,fisent.com,seed,2026-08-11,4300000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_a2d825f309dadac4,Fitting,fitting.sa,seed,2026-08-09,1100000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_ec5410329f36fbc9,FriskAI,friskai.com,pre_seed,2026-08-11,3600000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_1bd201679ba22ba0,FunVenture,funventure.eu,seed,2026-08-07,1000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_a1afb443d93cbb61,Hyperion Robotics,hyperionrobotics.com,venture_unknown,2026-07-16,7400000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_0e48d38aacdf2978,Atoms,i.atoms.co,venture_unknown,2026-07-22,1700000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_df53e1991f6c4ea9,InsForge,insforge.dev,pre_seed,2026-07-16,500000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_c156a40b3f951830,microagi,microagi.ai,seed,2026-07-16,55000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_aa6d3e23f3f2f716,Moove,moove.io,series_c,2026-08-05,250000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_3041cb11c1075fea,Processa Pharmaceuticals,processapharma.com,post_ipo_equity,2026-07-29,200000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_801311baf6394ae5,River Markets (YC P26),rivermarkets.com,seed,2026-08-01,8500000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_5f7cfddacf59b6e3,SAIBLE,saible.co.uk,angel,2026-07-15,800000,GBP,,,,,,,,pending_ground_truth_research
+freshness-2026-08_7f2ebc306970f90a,Sent,sent.dm,series_a,2026-07-28,12000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_6cfb3872282d2878,SWISSto12,swissto12.com,series_c,2026-07-16,61000000,EUR,,,,,,,,pending_ground_truth_research
+freshness-2026-08_50ee3d35e47308c6,TetraGen Robotics,tetragen.ai,seed,2026-08-10,1800000,CAD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_c2ac1b92633ab582,Humanoid,thehumanoid.ai,series_a,2026-07-21,152000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_18ef7dc93bcaa138,Marquee,themarquee.ai,seed,2026-07-30,6500000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_9ee0605d91a78927,TidalSense,tidalsense.com,series_a,2026-07-24,19000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_a06a6a1de4f4dbbc,tyred,tyred.io,seed,2026-07-16,2500000,GBP,,,,,,,,pending_ground_truth_research
+freshness-2026-08_36a7e905a2b7a264,UNIT AI,unitai.co,seed,2026-07-29,12000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_2942cca96f1c069b,Vaderis Therapeutics AG,vaderis.com,series_b,2026-08-11,152500000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_93ca87dfde4f108e,VISOID,visoid.com,seed,2026-08-10,2500000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_cbd261e4e1395934,Walden Robotics,waldenrobotics.com,seed,2026-07-15,300000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_475c158620b65683,Wippi,wippi.com,seed,2026-08-12,1200000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_31400d5311a7b18b,Yuno,y.uno,series_b,2026-08-12,45000000,USD,,,,,,,,pending_ground_truth_research
+freshness-2026-08_d3e0b2cc53651978,Yope,yope.app,seed,2026-07-22,12300000,USD,,,,,,,,pending_ground_truth_research

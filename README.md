@@ -2,7 +2,18 @@
 
 Open data and reproducible runner code for the [OpenBenchmarks Company Funding Benchmark](https://openbenchmarks.com/company-funding).
 
-The frozen release compares eleven programmatic providers plus Crunchbase and Harmonic exported datasets on the same 300 company domains. It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
+The benchmark is **two boards**, split on how old the round is:
+
+- **Enrichment** — rounds announced more than 30 days ago. A durable historical set that grows each cycle as freshness snapshots age into it.
+- **Freshness** — rounds announced in the trailing 30 days, as dated snapshots. Every vendor is re-run against each new snapshot, which is what exposes update lag.
+
+Finding a round announced this week and holding a correct historical record are different capabilities, and a vendor can be strong at one and weak at the other. Averaging them into one number hid that, so they are measured separately.
+
+It is designed for GTM account prioritization and qualification: companies with known funding transitions are intentionally over-sampled so that the benchmark tests an actionable signal rather than mostly empty records.
+
+### Denominators differ per provider, on purpose
+
+A provider is scored against the companies it was actually measured on, never a board-wide total. A vendor added later is measured on more of the enrichment cohort than one added earlier, and vendors join freshness at different snapshots. Every leaderboard row therefore carries its own `case_count` and `snapshot_count`, and the verifier asserts they reconcile against that provider's own cells.
 
 ## Evaluated fields and headline metric
 
@@ -14,7 +25,7 @@ Every provider response is normalized to five funding fields:
 - Total raised
 - Funding-round count
 
-The headline metric is **correct stage yield**: LLM-judged correct latest stages divided by all 300 Ground Truth-reviewed companies. The rubric handles documented funding-stage equivalents and exact date/amount evidence for non-Series disagreements. Missing or incorrect provider stages lower yield; blank Ground Truth is a pass-through case and Undisclosed Ground Truth accepts a blank vendor stage.
+The headline metric is **correct stage yield**: LLM-judged correct latest stages divided by the Ground Truth-reviewed companies that provider was measured on. The rubric handles documented funding-stage equivalents and exact date/amount evidence for non-Series disagreements. Missing or incorrect provider stages lower yield; blank Ground Truth is a pass-through case and Undisclosed Ground Truth accepts a blank vendor stage.
 
 The other four fields contribute to the separate returned-data coverage metric; they are retained but not headline-scored in this release.
 
@@ -22,12 +33,14 @@ The other four fields contribute to the separate returned-data coverage metric; 
 
 | Path | Contents |
 |---|---|
-| `data/funding/company-funding-inputs-v1.csv` | Exact frozen 300-domain input list and primary-source funding references |
-| `data/latest-funding.json` | Publication snapshot: Ground Truth, 3,900 normalized provider outputs, LLM verdicts/reasons, and leaderboard |
+| `data/funding/company-funding-inputs-v1.csv` | Frozen enrichment input list and primary-source funding references |
+| `data/latest-funding.json` | Both boards: enrichment cases/runs/leaderboard, plus the pooled freshness leaderboard and its snapshot manifest |
+| `data/freshness/<YYYY-MM>.json` | One dated freshness snapshot: its own cases, runs and leaderboard |
+| `data/latest-funding-v2-frozen.json` | The 2026-08-04 single-board publication, preserved unchanged so prior citations still resolve |
 | `data/funding/pricing-v1.json` | Dated public entry-tier cost assumptions used for the estimated USD cost display |
 | `scripts/funding/run_funding_benchmark.py` | Credit-safe, resumable provider runner |
 | `scripts/funding/smoke_test_funding_providers.py` | Small contract smoke test for the original endpoint adapters |
-| `scripts/funding/run_structured_web_research.py` | Five-case Exa/Parallel structured-output contract pilot; raw outputs remain local |
+| `scripts/funding/run_structured_web_research.py` | Resumable runner for every natural-language arm: Exa search, Exa Agent, Parallel Task and Responses, Seltz, Firecrawl; raw outputs remain local |
 | `scripts/funding/run_crustdata_funding_batch.py` | Credit-safe submit/poll runner for Crustdata's 300-company batch enrichment |
 | `scripts/funding/run_zoominfo_funding.py` | Credit-safe, resumable ZoomInfo GTM CLI runner; serial 10-domain requests with a two-second interval |
 | `scripts/funding/score_funding_stage_dry_run.py` | Transparent latest-stage taxonomy and offline scoring report |
@@ -47,7 +60,9 @@ python3 -m venv .venv
 PYTHONPATH=scripts .venv/bin/python scripts/verify_public_artifacts.py
 ```
 
-The verifier checks the frozen 300-company cohort, all 3,900 provider cells, all 3,900 LLM verdicts/reasons, the 300-company denominator, and the published leaderboard. It makes no network calls.
+The verifier checks invariants rather than fixed counts, so it keeps working as the cohorts change: every leaderboard row reconciles against its own cells, each provider's denominator equals the cases it was measured on, each dated freshness file matches the manifest, the pooled freshness board equals the pooled recomputation of its snapshots, and no literal vendor response bodies are present. It makes no network calls.
+
+`scripts/recompute_funding_snapshot.py --check` additionally rebuilds every leaderboard from the committed verdicts and exits non-zero on any drift.
 
 ## Re-run live APIs
 
@@ -58,9 +73,34 @@ PYTHONPATH=scripts .venv/bin/python scripts/funding/run_funding_benchmark.py \
   --only fiber --confirm-paid
 ```
 
-For the new providers, use `run_structured_web_research.py exa` or `parallel`
-for the five-case contract pilot, and `run_crustdata_funding_batch.py submit`
-then `poll` for Crustdata. Crunchbase is deliberately not rerun by a script: it
+Every runner takes `--input` and an output directory, so a freshness snapshot is
+run exactly like the enrichment cohort with a different cohort file:
+
+```bash
+PYTHONPATH=scripts .venv/bin/python scripts/funding/run_structured_web_research.py exa \
+  --input data/funding/company-funding-inputs-v1.csv --confirm-paid
+```
+
+`run_structured_web_research.py` covers every provider that is asked the
+question in natural language: `exa` and `exa-instant` (Search API at two search
+types), `exa-agent` (Agent API), `parallel` (Task API) and
+`parallel-responses-medium` (Responses API), `seltz-companies` and `seltz-news`
+(Answer API at two search scopes), and `firecrawl` (Agent API). All of them send
+the same instruction and the same output schema, so the endpoint or its one
+varied parameter is the only difference between arms; the contract tests beside
+the runner assert that.
+
+Exa Agent is priced per request by effort and the runner pins it. Leaving the
+API default of `effort=auto` meters up to $5 per run, which is roughly fifty
+times the cost of the pinned `medium` across a 300-domain cohort.
+
+Firecrawl bills dynamic credits per run and the API defaults to a 2,500-credit
+ceiling per call, which is a runaway across a cohort. The runner sets an
+explicit cap and records the `creditsUsed` each run reports, which is where its
+published cost comes from.
+
+Use `run_crustdata_funding_batch.py submit` then
+`poll` for Crustdata. Crunchbase is deliberately not rerun by a script: it
 is a self-serve-plan CSV export, recorded as such in the snapshot. Harmonic is
 also a supplied, identity-audited export; it is published as normalized output
 and scored with the shared judge, but has no inferred request latency or cost.
@@ -74,22 +114,60 @@ ZoomInfo uses the logged-in [`gtm`](https://gtm.ai) CLI rather than a key in
 PYTHONPATH=scripts .venv/bin/python scripts/funding/run_zoominfo_funding.py --run
 ```
 
+Point it at a freshness cohort with its own input list and output directories.
+Pass absolute paths: each cell stores its batch file as a repo-relative path, so
+a relative `--batch-dir` fails *after* the billed call has been made.
+
+```bash
+PYTHONPATH=scripts .venv/bin/python scripts/funding/run_zoominfo_funding.py \
+  --input "$PWD/data/freshness/2026-08-inputs.csv" \
+  --raw-dir "$PWD/data/funding/provider-runs/freshness-2026-08/raw/zoominfo" \
+  --batch-dir "$PWD/data/funding/provider-runs/freshness-2026-08/raw/zoominfo-batches" \
+  --expect-cases 50 --run
+```
+
 The committed snapshot contains the normalized benchmark contract for every provider answer, including status, latency, errors, LLM stage verdicts/reasons, and safe adapter audit metadata. Literal vendor HTTP response bodies stay in local, ignored runner checkpoints and are not redistributed here.
 
 ## Providers
 
+Fifteen vendors, measured across nineteen arms: a vendor with more than one
+endpoint is scored once per endpoint, because those endpoints have different
+accuracy, latency and price. Both boards group the arms by how they produce an
+answer, which is a reading aid rather than a scoring rule. Every arm is asked
+the same question about the same companies and judged by the same policy.
+
+**Long Running Agent APIs** dispatch an agent that researches each company at
+request time.
+
+- Exa (Agent API)
+- Firecrawl (Agent API)
+- Parallel (Task API)
+
+**Web search APIs** query an index and extract the answer from it.
+
+- Exa (Search API, deep-reasoning)
+- Exa (Search API, instant)
+- Parallel (Responses API, medium reasoning effort)
+- Seltz (Answer API, companies scope)
+- Seltz (Answer API, news scope)
+
+**GTM data providers** return a stored record from a maintained database.
+
 - Apollo
 - CompanyEnrich
-- Crunchbase (exported dataset; no API-latency score)
+- Crunchbase (exported dataset; no API-latency or cost score)
 - Crustdata
-- Exa
 - Explorium
 - Fiber
 - Harmonic (identity-audited exported dataset; no API-latency or cost score)
 - Ocean.io
-- Parallel
 - People Data Labs
 - PredictLeads
 - ZoomInfo (GTM Studio company enrichment)
+
+A high-effort Parallel Responses arm was published on 2026-08-15 and withdrawn
+on 2026-08-17. Its rows were removed rather than left to go stale, so it is
+absent from the current snapshot; `data/latest-funding-v2-frozen.json` predates
+it and never contained it.
 
 No vendor sponsors or controls this benchmark.

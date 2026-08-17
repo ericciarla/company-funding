@@ -18,7 +18,7 @@ from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[2]
-INPUT = ROOT / "data" / "funding" / "company-funding-benchmark-inputs-v1.csv"
+INPUT = ROOT / "data" / "funding" / "company-funding-inputs-v1.csv"
 STATE = ROOT / "data" / "funding" / "provider-runs-v2" / "crustdata-batch-state.json"
 BASE_URL = "https://api.crustdata.com"
 HEADERS = lambda: {
@@ -49,18 +49,27 @@ def write_state(state: dict) -> None:
 
 
 def main() -> int:
+    global STATE
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices=["submit", "poll"])
+    # Freshness snapshots are their own cohorts, so input, output and
+    # expected size are arguments rather than the frozen enrichment input.
+    parser.add_argument("--input", type=Path, default=INPUT)
+    parser.add_argument("--state", type=Path, default=STATE, help="Batch submit/poll checkpoint.")
+    parser.add_argument("--expect-cases", type=int, default=None)
     args = parser.parse_args()
+    STATE = args.state
     if not os.environ.get("CRUSTDATA_API_KEY"):
         raise RuntimeError("CRUSTDATA_API_KEY is required")
     if args.command == "submit":
         if STATE.exists():
             raise RuntimeError(f"Saved batch state already exists: {STATE}. Use poll; do not submit a duplicate batch.")
-        cases = list(csv.DictReader(INPUT.open(newline="", encoding="utf-8")))
+        cases = list(csv.DictReader(args.input.open(newline="", encoding="utf-8")))
+        if args.expect_cases is not None and len(cases) != args.expect_cases:
+            raise RuntimeError(f"expected {args.expect_cases} inputs, found {len(cases)}")
         domains = [case["company_domain"] for case in cases]
-        if len(domains) != 300 or len(set(domains)) != 300:
-            raise RuntimeError("Expected 300 unique benchmark domains")
+        if len(set(domains)) != len(domains):
+            raise RuntimeError("Cohort has duplicate domains")
         response = request_json(
             f"{BASE_URL}/batch/company/enrich",
             {"domains": domains, "fields": ["funding"], "chunk_size": 100},
@@ -69,9 +78,9 @@ def main() -> int:
         write_state(state)
         print(json.dumps(state, indent=2))
         return 0
-    if not STATE.exists():
+    if not args.state.exists():
         raise RuntimeError("No saved submission state; run submit first.")
-    state = json.loads(STATE.read_text())
+    state = json.loads(args.state.read_text())
     batch_id = state["submission"]["batch_id"]
     status = request_json(f"{BASE_URL}/batch/{batch_id}")
     state["last_polled_at"] = datetime.now(UTC).isoformat()
