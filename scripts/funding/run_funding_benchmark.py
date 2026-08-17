@@ -62,15 +62,23 @@ def safe_filename(value: str) -> str:
     return re.sub(r"[^a-z0-9._-]+", "_", value.lower()).strip("_")
 
 
+RAW_OVERRIDE: Path | None = None
+
+
 def cell_path(provider: str, domain: str) -> Path:
-    return RAW_DIR / provider / f"{safe_filename(domain)}.json"
+    return (RAW_OVERRIDE or RAW_DIR) / provider / f"{safe_filename(domain)}.json"
 
 
-def load_cases() -> list[dict[str, str]]:
-    cases = list(csv.DictReader(INPUT.open(newline="")))
+def load_cases(path: Path, expect: int | None) -> list[dict[str, str]]:
+    """Cohort size is no longer fixed: freshness snapshots are their own size."""
+    cases = list(csv.DictReader(path.open(newline="")))
     domains = [row["company_domain"].lower().strip() for row in cases]
-    if len(cases) != 300 or len(set(domains)) != len(domains):
-        raise RuntimeError(f"expected 300 unique inputs, found {len(cases)} rows / {len(set(domains))} domains")
+    if not cases:
+        raise RuntimeError(f"{path} has no rows")
+    if len(set(domains)) != len(domains):
+        raise RuntimeError(f"{path} has duplicate domains")
+    if expect is not None and len(cases) != expect:
+        raise RuntimeError(f"expected {expect} inputs, found {len(cases)}")
     return cases
 
 
@@ -283,6 +291,9 @@ def main() -> int:
     parser.add_argument("--retry-status", help="explicit statuses to retry, e.g. rate_limited,server_error")
     parser.add_argument("--retry-dns-errors", action="store_true", help="retry only saved NameResolutionError/network-unreachable cells; preserves prior attempt records")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--input", type=Path, default=INPUT, help="Cohort CSV. Defaults to the frozen enrichment inputs.")
+    parser.add_argument("--raw-dir", type=Path, default=None, help="Root for saved cells. Defaults to the local checkpoint tree.")
+    parser.add_argument("--expect-cases", type=int, default=None, help="Fail unless the cohort has exactly this many rows.")
     parser.add_argument("--confirm-paid", action="store_true", help="required before any live provider API call")
     args = parser.parse_args()
     load_environment()
@@ -291,7 +302,9 @@ def main() -> int:
     if unknown:
         parser.error(f"unknown providers: {', '.join(sorted(unknown))}")
     retry_statuses = {value.strip() for value in (args.retry_status or "").split(",") if value.strip()}
-    cases = load_cases()
+    global RAW_OVERRIDE
+    RAW_OVERRIDE = args.raw_dir
+    cases = load_cases(args.input, args.expect_cases)
     if not args.dry_run and not args.confirm_paid:
         parser.error("live provider calls require --confirm-paid")
     if not args.dry_run:
